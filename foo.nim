@@ -1,10 +1,7 @@
 import std/times
 import std/strutils
-#import std/tables
 import std/streams
 import std/lists
-
-include std/tables
 
 const
   tablesAreSpecial = false
@@ -164,6 +161,7 @@ when isMainModule:
   import std/strutils
   import std/hashes
   import std/tables
+  import std/os
 
   import criterion
 
@@ -182,6 +180,9 @@ when isMainModule:
       f: F
       j: Table[string, int]
       k: TableRef[string, int]
+
+  proc fileSize(path: string): float =
+    result = getFileInfo(path).size.float / (1024*1024)
 
   randomize()
 
@@ -257,8 +258,10 @@ when isMainModule:
     timer "read goats hash":
       h = hash(vals)
 
+    const
+      fn = "goats"
     when true:
-      fh = openFileStream("goats", fmWrite)
+      fh = openFileStream(fn, fmWrite)
       timer "write some goats":
         for x in vals.items:
           #echo "write ", x
@@ -266,7 +269,7 @@ when isMainModule:
       fh.flush
       fh.close
 
-      fh = openFileStream("goats", fmRead)
+      fh = openFileStream(fn, fmRead)
       fh.setPosition 0
       timer "read some goats from a file":
         while not fh.atEnd:
@@ -274,9 +277,10 @@ when isMainModule:
           fh.readThing x
           #echo "read ", x
       fh.close
+      echo "file size in meg: ", fileSize(fn)
 
-      when false:
-        fh = openFileStream("goats", fmRead)
+      when true:
+        fh = openFileStream(fn, fmRead)
         let data = fh.readAll
         fh.close
         timer "read some goats from a string":
@@ -284,11 +288,11 @@ when isMainModule:
           while not ss.atEnd:
             var x = MyType()
             ss.readThing x
-            echo "read ", x
+            #echo "read ", x
           ss.close
 
       timer "check hash of goats":
-        fh = openFileStream("goats", fmRead)
+        fh = openFileStream(fn, fmRead)
         var q: seq[MyType]
         while not fh.atEnd:
           var x = MyType()
